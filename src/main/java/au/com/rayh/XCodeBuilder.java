@@ -946,10 +946,14 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
                 listener.getLogger().println("Archiving dSYM");
                 //List<FilePath> dSYMs = buildDirectory.absolutize().child(configuration + "-" + buildPlatform).list(new DSymFileFilter());
                 List<FilePath> dSYMs = buildDirectory.absolutize().child(xcodeSchema + ".xcarchive/dSYMs").list(new DSymFileFilter());
+                if (dSYMs == null || dSYMs.isEmpty()) {
+                    listener.getLogger().println("No dSYM file found in " + buildDirectory.absolutize().child(xcodeSchema + ".xcarchive/dSYMs") + "!");
+                    dSYMs = buildDirectory.absolutize().child("Release-iphoneos").list(new DSymFileFilter());
+                }
 
                 if (dSYMs == null || dSYMs.isEmpty()) {
                     //listener.getLogger().println("No dSYM file found in " + buildDirectory.absolutize().child(configuration + "-" + buildPlatform) + "!");
-                    listener.getLogger().println("No dSYM file found in " + buildDirectory.absolutize().child(xcodeSchema + ".xcarchive/dSYMs") + "!");
+                    listener.getLogger().println("No dSYM file found in " + buildDirectory.absolutize().child("Release-iphoneos") + "!");
                 } else {
                     for (FilePath dSYM : dSYMs) {
                         returnCode = launcher.launch()
