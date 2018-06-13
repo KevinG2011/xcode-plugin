@@ -104,6 +104,8 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
             + "  <key>signingStyle</key><string>automatic</string>"
             + "  <key>method</key><string>${IPA_EXPORT_METHOD}</string>"
             + "  <key>iCloudContainerEnvironment</key><string>${ICLOUD_CONTAINER_ENV}</string>"
+            + "  <key>compileBitcode</key><false/>"
+            + "  <key>uploadBitcode</key><false/>"
             + "</dict>"
             + "</plist>";
 
@@ -116,6 +118,8 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
             + "  <key>signingCertificate</key><string>${SIGNING_CERTIFICATE}</string>"
             + "  <key>provisioningProfiles</key><dict>${PROVISIONING_PROFILES}</dict>"
             + "  <key>iCloudContainerEnvironment</key><string>${ICLOUD_CONTAINER_ENV}</string>"
+            + "  <key>compileBitcode</key><false/>"
+            + "  <key>uploadBitcode</key><false/>"
             + "</dict>"
             + "</plist>";
 
