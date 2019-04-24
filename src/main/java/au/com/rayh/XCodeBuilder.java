@@ -953,7 +953,7 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
 
                 listener.getLogger().println(Messages.XCodeBuilder_DebugInfoLineDelimiter());
                 
-                if(exportAppstoreIpa && ("app-store").equals(ipaExportMethod) == false) {
+                if(null != exportAppstoreIpa && exportAppstoreIpa && ("app-store").equals(ipaExportMethod) == false) {
                 	String appstoreExportMethod = "app-store";
                 	if(null == exportAppStoreOptionsPlistLocation) {
                     	//export appstore options
