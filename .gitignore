@@ -6,3 +6,6 @@ test-*
 .DS_Store
 *.orig
 /examples
+.classpath
+.project
+.settings/

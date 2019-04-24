@@ -123,7 +123,10 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
             + "</dict>"
             + "</plist>";
 
-
+    /**
+     * @since 2.1
+     */
+    public final Boolean exportAppstoreIpa;
     /**
      * @since 1.0
      */
@@ -269,7 +272,7 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public XCodeBuilder(Boolean buildIpa, Boolean generateArchive, Boolean noConsoleLog, String logfileOutputDirectory, Boolean cleanBeforeBuild, 
+    public XCodeBuilder(Boolean exportAppstoreIpa, Boolean buildIpa, Boolean generateArchive, Boolean noConsoleLog, String logfileOutputDirectory, Boolean cleanBeforeBuild, 
     		Boolean cleanTestReports, String configuration,
     		String target, String sdk, String xcodeProjectPath, String xcodeProjectFile, String xcodebuildArguments,
     		String cfBundleVersionValue, String cfBundleShortVersionStringValue, Boolean unlockKeychain,
@@ -286,6 +289,7 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
         this.sdk = sdk;
         this.target = target;
         this.cleanBeforeBuild = cleanBeforeBuild;
+        this.exportAppstoreIpa = exportAppstoreIpa;
         this.cleanTestReports = cleanTestReports;
         this.configuration = configuration;
         this.xcodeProjectPath = xcodeProjectPath;
@@ -326,7 +330,7 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
                         String xcodeSchema, String buildDir, String developmentTeamName, String developmentTeamID, Boolean allowFailingBuildResults,
                         String ipaName, Boolean provideApplicationVersion, String ipaOutputDirectory, Boolean changeBundleID, String bundleID,
                         String bundleIDInfoPlistPath, String ipaManifestPlistUrl, Boolean interpretTargetAsRegEx, String ipaExportMethod) {
-        this(buildIpa, generateArchive, noConsoleLog, logfileOutputDirectory, cleanBeforeBuild, cleanTestReports, configuration,
+        this(false, buildIpa, generateArchive, noConsoleLog, logfileOutputDirectory, cleanBeforeBuild, cleanTestReports, configuration,
                 target, sdk, xcodeProjectPath, xcodeProjectFile, xcodebuildArguments,
                 cfBundleVersionValue, cfBundleShortVersionStringValue, unlockKeychain,
                 keychainName, keychainPath, keychainPwd, symRoot, xcodeWorkspaceFile,
@@ -784,7 +788,7 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
             commandLine.add("DEVELOPMENT_TEAM=" + developmentTeamID);
             xcodeReport.append(", developmentTeamID: ").append(developmentTeamID);
         } else {
-            commandLine.add("-allowProvisioningUpdates");
+//            commandLine.add("-allowProvisioningUpdates");
             xcodeReport.append(", developmentTeamID: AUTOMATIC");
         }
 
@@ -834,7 +838,7 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
             // packaging IPA
             listener.getLogger().println(Messages.XCodeBuilder_packagingIPA());
 
-
+            //export method options
             FilePath exportOptionsPlistLocation = ipaOutputPath.child(ipaExportMethod + developmentTeamID + "ExportOptions.plist");
             String exportOptionsPlist;
             if (manualSigning != null && manualSigning) {
@@ -870,6 +874,7 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
                 return false;
             }
 
+            FilePath exportAppStoreOptionsPlistLocation = null;
             for (FilePath archive : archives) {
                 String version = "";
                 String shortVersion = "";
@@ -926,10 +931,14 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
 
                 List<String> packageCommandLine = new ArrayList<>();
                 packageCommandLine.add(getGlobalConfiguration().getXcodebuildPath());
-                packageCommandLine.addAll(Lists.newArrayList("-exportArchive", "-archivePath", archive.absolutize().getRemote(), "-exportPath", ipaOutputPath.absolutize().getRemote(), "-exportOptionsPlist", exportOptionsPlistLocation.absolutize().getRemote()));
+                packageCommandLine.addAll(Lists.newArrayList("-exportArchive", 
+                											 "-archivePath", archive.absolutize().getRemote(), 
+                											 "-exportPath", ipaOutputPath.absolutize().getRemote(), 
+                											 "-exportOptionsPlist", exportOptionsPlistLocation.absolutize().getRemote()));
                 if (manualSigning == null || !manualSigning) {
-                    packageCommandLine.add("-allowProvisioningUpdates");
+//                    packageCommandLine.add("-allowProvisioningUpdates");
                 }
+                listener.getLogger().println("Exporting for " + ipaExportMethod);
                 returnCode = launcher.launch().envs(envs).stdout(listener).pwd(projectRoot).cmds(packageCommandLine).join();
                 if (returnCode > 0) {
                     listener.getLogger().println("Failed to build " + ipaLocation.absolutize().getRemote());
@@ -942,6 +951,60 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
                 }
 
 
+                listener.getLogger().println(Messages.XCodeBuilder_DebugInfoLineDelimiter());
+                
+                if(exportAppstoreIpa && ("app-store").equals(ipaExportMethod) == false) {
+                	String appstoreExportMethod = "app-store";
+                	if(null == exportAppStoreOptionsPlistLocation) {
+                    	//export appstore options
+                        exportAppStoreOptionsPlistLocation = ipaOutputPath.child(appstoreExportMethod + developmentTeamID + "ExportOptions.plist");
+                        String exportAppstoreOptionsPlist;
+                        if (manualSigning != null && manualSigning) {
+                            StringBuilder plistProvisioningProfiles = new StringBuilder("");
+                            for (ProvisioningProfile pp : provisioningProfiles) {
+                                plistProvisioningProfiles.append(pp.toPlist(envs));
+                            }
+
+                            exportAppstoreOptionsPlist = MANUAL_EXPORT_OPTIONS_PLIST_TEMPLATE
+                                    .replace("${DEVELOPMENT_TEAM}", developmentTeamID)
+                                    .replace("${PROVISIONING_PROFILES}", plistProvisioningProfiles.toString());
+                        } else {
+                        	exportAppstoreOptionsPlist = AUTOMATIC_EXPORT_OPTIONS_PLIST_TEMPLATE;
+                        }
+                        exportAppstoreOptionsPlist = exportAppstoreOptionsPlist.replace("${IPA_EXPORT_METHOD}", appstoreExportMethod);
+                        exportAppstoreOptionsPlist = exportAppstoreOptionsPlist.replace("${ICLOUD_CONTAINER_ENV}", PRODUCTION_ENV);
+                        exportAppstoreOptionsPlist = exportAppstoreOptionsPlist.replace("${SIGNING_CERTIFICATE}", DIST_SIGNING_CERTIFICATE_SELECTOR);
+                        exportAppStoreOptionsPlistLocation.write(exportAppstoreOptionsPlist, "UTF-8");
+                	}
+                	
+                    listener.getLogger().println("Exporting for " + appstoreExportMethod);
+                    
+                    List<String> appstorePackageCommandLine = new ArrayList<>();
+                    appstorePackageCommandLine.add(getGlobalConfiguration().getXcodebuildPath());
+                    appstorePackageCommandLine.addAll(Lists.newArrayList("-exportArchive", 
+                    													 "-archivePath", archive.absolutize().getRemote(), 
+                    													 "-exportPath", ipaOutputPath.absolutize().getRemote(), 
+                    													 "-exportOptionsPlist", exportAppStoreOptionsPlistLocation.absolutize().getRemote()));
+                    if (manualSigning == null || !manualSigning) {
+//                    	appstorePackageCommandLine.add("-allowProvisioningUpdates");
+                    }
+                    returnCode = launcher.launch().envs(envs).stdout(listener).pwd(projectRoot).cmds(appstorePackageCommandLine).join();
+                    if (returnCode > 0) {
+                        listener.getLogger().println("Failed to build " + ipaLocation.absolutize().getRemote());
+                        return false;
+                    }
+                    //rename exported ipa
+                    FilePath exportedAppstoreIpa = ipaOutputPath.child(archive.getBaseName() + ".ipa");
+                    if (exportedAppstoreIpa.exists()) {
+                        String appstoreIpaFileName = baseName + "_appstore.ipa";
+                        FilePath appstoreIpaLocation = ipaOutputPath.child(appstoreIpaFileName);
+                    	exportedAppstoreIpa.renameTo(appstoreIpaLocation);
+                    }
+                    
+                    listener.getLogger().println(Messages.XCodeBuilder_DebugInfoLineDelimiter());
+                }
+                
+                
                 // also zip up the symbols, if present
                 listener.getLogger().println("Archiving dSYM");
                 //List<FilePath> dSYMs = buildDirectory.absolutize().child(configuration + "-" + buildPlatform).list(new DSymFileFilter());

@@ -47,6 +47,10 @@
         </f:entry>
 
         <f:advanced title="Settings">
+            <f:entry title="${%Build appstore ipa?}" field="exportAppstoreIpa" description="同时导出Appstore的包?">
+                <f:checkbox title="No" />
+            </f:entry>
+
             <f:entry title="${%Clean before build?}" field="cleanBeforeBuild" description="This will delete the build directories before invoking the build.">
                 <f:checkbox title="Yes" />
             </f:entry>
