@@ -1,6 +1,9 @@
 package au.com.rayh;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.Extension;
+import hudson.security.ACL;
 import hudson.util.IOUtils;
 import hudson.util.Secret;
 
@@ -11,6 +14,7 @@ import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -43,7 +47,6 @@ public class DeveloperProfile extends BaseStandardCredentials {
      */
     private Secret password;
 
-
     @DataBoundConstructor
     public DeveloperProfile(@CheckForNull CredentialsScope scope, @CheckForNull String id, @CheckForNull String description,
             Secret password, FileItem image) throws IOException {
@@ -67,6 +70,8 @@ public class DeveloperProfile extends BaseStandardCredentials {
 
     /**
      * Retrieves the PKCS12 byte image.
+     * @return PKCS12 byte image
+     * @throws IOException file I/O
      */
     public byte[] getImage() throws IOException {
         return new ConfidentialKeyImpl(getId()).load();
@@ -74,6 +79,9 @@ public class DeveloperProfile extends BaseStandardCredentials {
 
     /**
      * Obtains the certificates in this developer profile.
+     * @return X509Certificates
+     * @throws IOException file I/O
+     * @throws GeneralSecurityException Certificate error
      */
     public @Nonnull List<X509Certificate> getCertificates() throws IOException, GeneralSecurityException {
         try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(getImage()))) {
@@ -133,5 +141,9 @@ public class DeveloperProfile extends BaseStandardCredentials {
         public @CheckForNull byte[] load() throws IOException {
             return super.load();
         }
+    }
+
+    public static List<DeveloperProfile> getAllProfiles() {
+	return CredentialsProvider.lookupCredentials(DeveloperProfile.class, (hudson.model.Item)null, ACL.SYSTEM, Collections.<DomainRequirement>emptyList());
     }
 }
