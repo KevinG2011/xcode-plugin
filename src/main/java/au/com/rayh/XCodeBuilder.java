@@ -1822,7 +1822,7 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
             if ( !ArrayUtils.contains(VALID_IPA_EXPORT_METHODS, ipaExportMethod) ) {
                 String validMethodsMsg = StringUtils.join(VALID_IPA_EXPORT_METHODS, ", ");
                 listener.fatalError(Messages.XCodeBuilder_IpaExportMethodMuestBeOneOfTheFollowing(validMethodsMsg));
-		return false;
+                return false;
             }
 
             // clean IPA
@@ -1939,8 +1939,8 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
     	    exportOptionsPlist.put("stripSwiftSymbols", stripSwiftSymbols);
     	    // Extra options
     	    if ( ipaExportMethod.equals("app-store") ) { 
-    		exportOptionsPlist.put("uploadBitcode", uploadBitcode);
-    		exportOptionsPlist.put("uploadSymbols", uploadSymbols);
+    	    	exportOptionsPlist.put("uploadBitcode", uploadBitcode);
+    	    	exportOptionsPlist.put("uploadSymbols", uploadSymbols);
     	    }
     	    else {
     		if ( !StringUtils.isEmpty(thinning) ) {
@@ -2042,8 +2042,8 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
                 											 "-exportPath", ipaOutputPath.absolutize().getRemote(), 
                 											 "-exportOptionsPlist", exportOptionsPlistLocation.absolutize().getRemote()));
                 if (archiveAutomaticSigning || signingMethod == null || (!signingMethod.equals("manual") && !signingMethod.equals("readFromProject"))) {
-		    if (haveAllowProvisioningUpdates)
-                	packageCommandLine.add("-allowProvisioningUpdates");
+                	if (haveAllowProvisioningUpdates)
+                		packageCommandLine.add("-allowProvisioningUpdates");
                 }
                 listener.getLogger().println("Exporting for " + ipaExportMethod);
                 returnCode = launcher.launch().envs(envs).stdout(listener).pwd(projectRoot).cmds(packageCommandLine).join();
@@ -2082,10 +2082,10 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
                     													 "-archivePath", archive.absolutize().getRemote(), 
                     													 "-exportPath", ipaOutputPath.absolutize().getRemote(), 
                     													 "-exportOptionsPlist", exportAppStoreOptionsPlistLocation.absolutize().getRemote()));
-                    if (archiveAutomaticSigning || signingMethod == null || (!signingMethod.equals("manual") && !signingMethod.equals("readFromProject"))) {
-            		    if (haveAllowProvisioningUpdates)
-            		    	packageCommandLine.add("-allowProvisioningUpdates");
-                    }
+//                    if (archiveAutomaticSigning || signingMethod == null || (!signingMethod.equals("manual") && !signingMethod.equals("readFromProject"))) {
+//            		    if (haveAllowProvisioningUpdates)
+//            		    	packageCommandLine.add("-allowProvisioningUpdates");
+//                    }
                     returnCode = launcher.launch().envs(envs).stdout(listener).pwd(projectRoot).cmds(appstorePackageCommandLine).join();
                     if (returnCode > 0) {
                         listener.getLogger().println("Failed to build " + ipaLocation.absolutize().getRemote());
