@@ -2110,15 +2110,11 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
                 	dSYMs = buildDirectory.absolutize().child("Release-iphoneos").list(new DSymFileFilter());
                 }
                 
-                if (dSYMs == null || dSYMs.isEmpty()) {
-                    listener.getLogger().println(Messages.XCodeBuilder_NoDSYMFileFound(archive.absolutize().child("Release-iphoneos")));
-                }
-
 		// JENKINS-54414
 		// May be, this is no longer necessary.
 		//dSYMs.addAll(buildDirectory.absolutize().child(configuration + "-" + buildPlatform).list(new DSymFileFilter()));
 		if (dSYMs == null || dSYMs.isEmpty()) {
-		    listener.getLogger().println(Messages.XCodeBuilder_NoDSYMFileFound(archive.absolutize().child("dSYMs")));
+		    listener.getLogger().println(Messages.XCodeBuilder_NoDSYMFileFound(archive.absolutize().child("Release-iphoneos")));
 		}
 		else {
                     for (FilePath dSYM : dSYMs) {
