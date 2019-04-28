@@ -2060,6 +2060,7 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
                 listener.getLogger().println(Messages.XCodeBuilder_DebugInfoLineDelimiter());
                 
                 if(null != exportAppstoreIpa && exportAppstoreIpa && ("app-store").equals(ipaExportMethod) == false) {
+                	exportOptionsPlist.put("method", "app-store");
                 	exportOptionsPlist.put("iCloudContainerEnvironment", PRODUCTION_ENV);
             		exportOptionsPlist.put("uploadBitcode", uploadBitcode);
             		exportOptionsPlist.put("uploadSymbols", uploadSymbols);                	
