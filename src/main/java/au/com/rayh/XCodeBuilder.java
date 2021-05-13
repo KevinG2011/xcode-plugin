@@ -2116,6 +2116,7 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
                     baseName = customVars.expand(ipaName);
                 }
 
+
                 String ipaFileName = baseName + ".ipa";
                 FilePath ipaLocation = ipaOutputPath.child(ipaFileName);
 
@@ -2149,8 +2150,14 @@ public class XCodeBuilder extends Builder implements SimpleBuildStep {
                 }
                 // rename exported ipa
                 FilePath exportedIpa = ipaOutputPath.child(archive.getBaseName() + ".ipa");
+                if (exportedIpa != null) {
+                    listener.getLogger().println("exportedIpa => " + exportedIpa.absolutize().getRemote());
+                }
                 if (exportedIpa.exists()) {
                     exportedIpa.renameTo(ipaLocation);
+                    listener.getLogger().println("exportedIpa exists");
+                } else {
+                    listener.getLogger().println("exportedIpa not exists");
                 }
 
                 listener.getLogger().println(Messages.XCodeBuilder_DebugInfoLineDelimiter());

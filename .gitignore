@@ -9,3 +9,4 @@ test-*
 .classpath
 .project
 .settings/
+.factorypath
